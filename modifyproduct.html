@@ -98,7 +98,7 @@
       
 
 
-        <button type="button" onclick="modifyp(event)">
+        <button id="submit" type="button" onclick="modifyp(event)">
             Save Changes
         </button>
 
@@ -223,7 +223,11 @@
 
                     document.getElementById("message").textContent =
                         "Product updated successfully";
+                  document.getElementById("submit").disabled = true;
 
+                         setTimeout(() => {
+    window.location.href = "products.html";
+}, 3000);
                 } else {
 
                     document.getElementById("message").textContent =
@@ -240,6 +244,7 @@
                     "Error updating product";
 
             }
+    
 };
 
 </script>
