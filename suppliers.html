@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>الموردين - نظام إدارة المتجر</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            color: #1f2937;
+        }
+
+        header {
+            background: #1f2937;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: auto;
+            padding: 20px;
+        }
+
+        .box {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        h2, h3 {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 7px;
+        }
+
+        input {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #d1d5db;
+            border-radius: 9px;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        button {
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: 9px;
+            background: #2563eb;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .supplier {
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 12px;
+        }
+
+        .supplier p {
+            margin: 7px 0;
+        }
+
+        .empty {
+            text-align: center;
+            color: #64748b;
+            padding: 20px;
+        }
+
+        .back {
+            background: #64748b;
+        }
+    </style>
+</head>
+
+<body>
+<script src="auth.js"></script>
+<header>
+    <h1>🚚 إدارة الموردين</h1>
+</header>
+
+<div class="container">
+
+    <div class="box">
+        <h2>إضافة مورد</h2>
+        <p>أدخل بيانات المورد الجديد</p>
+    </div>
+
+    <div class="box">
+
+        <form id="supplierForm">
+
+            <label>اسم المورد</label>
+
+            <input
+                type="text"
+                id="supplierName"
+                placeholder="مثلاً: شركة النور"
+                required
+            >
+
+            <label>رقم الهاتف</label>
+
+            <input
+                type="tel"
+                id="phone"
+                placeholder="مثلاً: 0912345678"
+                required
+            >
+
+            <label>البريد الإلكتروني</label>
+
+            <input
+                type="email"
+                id="email"
+                placeholder="example@gmail.com"
+            >
+
+            <label>العنوان</label>
+
+            <input
+                type="text"
+                id="address"
+                placeholder="عنوان المورد"
+            >
+
+            <button type="submit">
+                إضافة المورد
+            </button>
+
+        </form>
+
+    </div>
+
+    <div class="box">
+
+        <h3>📋 قائمة الموردين</h3>
+
+        <div id="supplierList">
+
+            <div class="empty">
+                لا يوجد موردين حتى الآن
+            </div>
+
+        </div>
+
+    </div>
+
+    <button
+        class="back"
+        onclick="window.location.href='index.html'">
+        ← العودة للوحة التحكم
+    </button>
+
+</div>
+
+<script>
+
+const API_URL =
+    "https://my-salary.infinityfreeapp.com/api/suppliers.php";
+
+const supplierForm =
+    document.getElementById("supplierForm");
+
+const supplierList =
+    document.getElementById("supplierList");
+
+
+async function loadSuppliers() {
+
+    try {
+
+        const response = await fetch(API_URL);
+
+        const suppliers = await response.json();
+
+        displaySuppliers(suppliers);
+
+    } catch (error) {
+
+        supplierList.innerHTML =
+            '<div class="empty">حدث خطأ في تحميل الموردين</div>';
+
+        console.error(error);
+    }
+}
+
+
+function displaySuppliers(suppliers) {
+
+    supplierList.innerHTML = "";
+
+    if (!Array.isArray(suppliers) || suppliers.length === 0) {
+
+        supplierList.innerHTML =
+            '<div class="empty">لا يوجد موردين حتى الآن</div>';
+
+        return;
+    }
+
+
+    suppliers.forEach(function(supplier) {
+
+        const div =
+            document.createElement("div");
+
+        div.className = "supplier";
+
+        div.innerHTML = `
+
+            <h3>🚚 ${supplier.name}</h3>
+
+            <p>📱 الهاتف: ${supplier.phone}</p>
+
+            <p>📧 البريد: ${supplier.email || "غير متوفر"}</p>
+
+            <p>📍 العنوان: ${supplier.address || "غير متوفر"}</p>
+
+        `;
+
+        supplierList.appendChild(div);
+
+    });
+
+}
+
+
+supplierForm.addEventListener(
+    "submit",
+    async function(event) {
+
+        event.preventDefault();
+
+        const name =
+            document.getElementById("supplierName").value.trim();
+
+        const phone =
+            document.getElementById("phone").value.trim();
+
+        const email =
+            document.getElementById("email").value.trim();
+
+        const address =
+            document.getElementById("address").value.trim();
+
+
+        if (!name || !phone) {
+
+            alert("اكتب اسم المورد ورقم الهاتف");
+
+            return;
+        }
+
+
+        try {
+
+            const response = await fetch(API_URL, {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+
+                    name: name,
+                    phone: phone,
+                    email: email,
+                    address: address
+
+                })
+
+            });
+
+
+            const result = await response.json();
+
+
+            if (result.success) {
+
+                alert("تمت إضافة المورد بنجاح ✅");
+
+                supplierForm.reset();
+
+                loadSuppliers();
+
+            } else {
+
+                alert(
+                    result.error ||
+                    "حدث خطأ أثناء إضافة المورد"
+                );
+
+            }
+
+        } catch (error) {
+
+            console.error(error);
+
+            alert("تعذر الاتصال بالسيرفر");
+
+        }
+
+    }
+);
+
+
+loadSuppliers();
+
+                  </script>
+</body>
+</html>

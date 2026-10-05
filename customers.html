@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>العملاء - نظام إدارة المتجر</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            color: #1f2937;
+        }
+
+        header {
+            background: #1f2937;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: auto;
+            padding: 20px;
+        }
+
+        .box {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .box h2,
+        .box h3 {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 7px;
+        }
+
+        input {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #d1d5db;
+            border-radius: 9px;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        button {
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: 9px;
+            background: #2563eb;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .customer {
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 12px;
+        }
+
+        .customer p {
+            margin: 7px 0;
+        }
+
+        .empty {
+            text-align: center;
+            color: #64748b;
+            padding: 20px;
+        }
+
+        .back {
+            background: #64748b;
+        }
+    </style>
+</head>
+
+<body>
+<script src="auth.js"></script>
+<header>
+    <h1>👥 إدارة العملاء</h1>
+</header>
+
+<div class="container">
+
+    <div class="box">
+        <h2>إضافة عميل</h2>
+        <p>أدخل بيانات العميل الجديد</p>
+    </div>
+
+    <div class="box">
+
+        <form id="customerForm">
+
+            <label>اسم العميل</label>
+
+            <input
+                type="text"
+                id="customerName"
+                placeholder="مثلاً: أحمد محمد"
+                required
+            >
+
+            <label>رقم الهاتف</label>
+
+            <input
+                type="tel"
+                id="phone"
+                placeholder="مثلاً: 0912345678"
+                required
+            >
+
+            <label>البريد الإلكتروني</label>
+
+            <input
+                type="email"
+                id="email"
+                placeholder="example@gmail.com"
+            >
+
+            <button type="submit">
+                إضافة العميل
+            </button>
+
+        </form>
+
+    </div>
+
+    <div class="box">
+
+        <h3>📋 قائمة العملاء</h3>
+
+        <div id="customerList">
+
+            <div class="empty">
+                لا يوجد عملاء حتى الآن
+            </div>
+
+        </div>
+
+    </div>
+
+    <button
+        class="back"
+        onclick="window.location.href='index.html'">
+        ← العودة للوحة التحكم
+    </button>
+
+</div>
+
+<script>
+
+const API_URL =
+    "https://my-salary.infinityfreeapp.com/api/customers.php";
+
+const customerForm =
+    document.getElementById("customerForm");
+
+const customerList =
+    document.getElementById("customerList");
+
+
+async function loadCustomers() {
+
+    try {
+
+        const response = await fetch(API_URL);
+
+        const customers = await response.json();
+
+        displayCustomers(customers);
+
+    } catch (error) {
+
+        customerList.innerHTML =
+            '<div class="empty">حدث خطأ في تحميل العملاء</div>';
+
+        console.error(error);
+    }
+}
+
+
+function displayCustomers(customers) {
+
+    customerList.innerHTML = "";
+
+    if (!Array.isArray(customers) || customers.length === 0) {
+
+        customerList.innerHTML =
+            '<div class="empty">لا يوجد عملاء حتى الآن</div>';
+
+        return;
+    }
+
+
+    customers.forEach(function(customer) {
+
+        const div =
+            document.createElement("div");
+
+        div.className = "customer";
+
+        div.innerHTML = `
+
+            <h3>👤 ${customer.name}</h3>
+
+            <p>📱 الهاتف: ${customer.phone}</p>
+
+            <p>📧 البريد: ${customer.email || "غير متوفر"}</p>
+            <button onclick="deletec(${customer.id})">حذف</button>
+
+        `;
+
+        customerList.appendChild(div);
+
+    });
+
+}
+
+
+customerForm.addEventListener(
+    "submit",
+    async function(event) {
+
+        event.preventDefault();
+
+        const name =
+            document.getElementById("customerName").value.trim();
+
+        const phone =
+            document.getElementById("phone").value.trim();
+
+        const email =
+            document.getElementById("email").value.trim();
+
+
+        if (!name || !phone) {
+
+            alert("اكتب اسم العميل ورقم الهاتف");
+
+            return;
+        }
+
+
+        try {
+
+            const response = await fetch(API_URL, {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+
+                    name: name,
+                    phone: phone,
+                    email: email
+
+                })
+
+            });
+
+
+            const result = await response.json();
+
+
+            if (result.success) {
+
+                alert("تمت إضافة العميل بنجاح ✅");
+
+                customerForm.reset();
+
+                loadCustomers();
+
+            } else {
+
+                alert(
+                    result.error ||
+                    "حدث خطأ أثناء إضافة العميل"
+                );
+
+            }
+
+        } catch (error) {
+
+            console.error(error);
+
+            alert("تعذر الاتصال بالسيرفر");
+
+        }
+
+    }
+);
+async function deletec(id){
+  try{
+    const response = await fetch("api/customers.php", {
+            method: "DELETE",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+                id: id
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+
+            alert("تم حذف العميل ✅");
+
+            loadCustomers();
+
+        } else {
+
+            alert(
+                result.error ||
+                "فشل حذف العميل ❌"
+            );
+        }
+  }
+  catch(error){
+    console.ereor(error);
+    alert("تعذر الاتصال");
+  }
+}
+
+loadCustomers();
+
+</script>
+
+</body>
+</html>

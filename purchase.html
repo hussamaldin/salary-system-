@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>المشتريات - نظام إدارة المتجر</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            color: #1f2937;
+        }
+
+        header {
+            background: #1f2937;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: auto;
+            padding: 20px;
+        }
+
+        .box {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        h2, h3 {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 7px;
+        }
+
+        input {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #d1d5db;
+            border-radius: 9px;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        button {
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: 9px;
+            background: #2563eb;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .purchase {
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 12px;
+        }
+
+        .purchase p {
+            margin: 7px 0;
+        }
+
+        .empty {
+            text-align: center;
+            color: #64748b;
+            padding: 20px;
+        }
+
+        .back {
+            background: #64748b;
+        }
+    </style>
+</head>
+
+<body>
+<script src="auth.js"></script>
+<header>
+    <h1>🛒 إدارة المشتريات</h1>
+</header>
+
+<div class="container">
+
+    <div class="box">
+        <h2>تسجيل عملية شراء</h2>
+        <p>أدخل بيانات المنتجات التي تم شراؤها من المورد</p>
+    </div>
+
+    <div class="box">
+
+        <form id="purchaseForm">
+
+            <label>اسم المنتج</label>
+<select id="productSelect" required>
+    <option value="">جاري تحميل المنتجات...</option>
+</select>
+
+            <label>سعر الشراء</label>
+
+            <input
+                type="number"
+                id="price"
+                placeholder="مثلاً: 120000"
+                required
+            >
+
+            <label>الكمية</label>
+
+            <input
+                type="number"
+                id="quantity"
+                placeholder="مثلاً: 20"
+                required
+            >
+
+            <label>اسم المورد</label>
+
+<select id="supplierSelect" required>
+    <option value="">اختر المورد</option>
+</select>
+
+            <button type="submit">
+                تسجيل الشراء
+            </button>
+
+        </form>
+
+    </div>
+
+    <div class="box">
+
+        <h3>📋 عمليات الشراء</h3>
+
+        <div id="purchaseList">
+
+            <div class="empty">
+                لا توجد عمليات شراء حتى الآن
+            </div>
+
+        </div>
+
+    </div>
+
+    <button
+        class="back"
+        onclick="window.location.href='index.html'">
+        ← العودة للوحة التحكم
+    </button>
+
+</div>
+
+
+<script>
+
+const API_URL =
+    "https://my-salary.infinityfreeapp.com/api/purchases.php";
+
+const PRODUCTS_API =
+    "https://my-salary.infinityfreeapp.com/api/products.php";
+
+const SUPPLIERS_API =
+    "https://my-salary.infinityfreeapp.com/api/suppliers.php";
+
+
+const purchaseForm =
+    document.getElementById("purchaseForm");
+
+const purchaseList =
+    document.getElementById("purchaseList");
+
+const productSelect =
+    document.getElementById("productSelect");
+
+const supplierSelect =
+    document.getElementById("supplierSelect");
+
+
+/* =========================
+   تحميل المنتجات
+========================= */
+
+async function loadProducts() {
+
+    try {
+
+        const response =
+            await fetch(PRODUCTS_API);
+
+        if (!response.ok) {
+            throw new Error("Products API Error");
+        }
+
+        const products =
+            await response.json();
+
+        console.log("Products:", products);
+
+        productSelect.innerHTML =
+            '<option value="">اختر المنتج</option>';
+
+        if (!Array.isArray(products)) {
+            throw new Error("بيانات المنتجات غير صحيحة");
+        }
+
+        products.forEach(function(product) {
+
+            const option =
+                document.createElement("option");
+
+            option.value = product.id;
+
+            option.textContent =
+                product.name +
+                " - المخزون: " +
+                product.quantity;
+
+            productSelect.appendChild(option);
+
+        });
+
+    } catch (error) {
+
+        console.error("خطأ المنتجات:", error);
+
+        productSelect.innerHTML =
+            '<option value="">فشل تحميل المنتجات</option>';
+
+    }
+
+}
+
+
+/* =========================
+   تحميل الموردين
+========================= */
+
+async function loadSuppliers() {
+
+    try {
+
+        const response =
+            await fetch(SUPPLIERS_API);
+
+        if (!response.ok) {
+            throw new Error("Suppliers API Error");
+        }
+
+        const suppliers =
+            await response.json();
+
+        console.log("Suppliers:", suppliers);
+
+        supplierSelect.innerHTML =
+            '<option value="">اختر المورد</option>';
+
+        if (!Array.isArray(suppliers)) {
+            throw new Error("بيانات الموردين غير صحيحة");
+        }
+
+        suppliers.forEach(function(supplier) {
+
+            const option =
+                document.createElement("option");
+
+            option.value = supplier.id;
+
+            option.textContent = supplier.name;
+
+            supplierSelect.appendChild(option);
+
+        });
+
+    } catch (error) {
+
+        console.error("خطأ الموردين:", error);
+
+        supplierSelect.innerHTML =
+            '<option value="">فشل تحميل الموردين</option>';
+
+    }
+
+}
+
+
+/* =========================
+   تحميل المشتريات
+========================= */
+
+async function loadPurchases() {
+
+    try {
+
+        const response =
+            await fetch(API_URL);
+
+        if (!response.ok) {
+            throw new Error("Purchases API Error");
+        }
+
+        const purchases =
+            await response.json();
+
+        displayPurchases(purchases);
+
+    } catch (error) {
+
+        console.error("خطأ المشتريات:", error);
+
+        purchaseList.innerHTML =
+            '<div class="empty">حدث خطأ في تحميل المشتريات</div>';
+
+    }
+
+}
+
+
+/* =========================
+   عرض المشتريات
+========================= */
+
+function displayPurchases(purchases) {
+
+    purchaseList.innerHTML = "";
+
+    if (
+        !Array.isArray(purchases) ||
+        purchases.length === 0
+    ) {
+
+        purchaseList.innerHTML =
+            '<div class="empty">لا توجد عمليات شراء حتى الآن</div>';
+
+        return;
+
+    }
+
+
+    purchases.forEach(function(purchase) {
+
+        const div =
+            document.createElement("div");
+
+        div.className = "purchase";
+
+        div.innerHTML = `
+
+            <h3>
+                📦 ${purchase.product_name || "منتج"}
+            </h3>
+
+            <p>
+                💰 سعر الشراء:
+                ${purchase.price}
+            </p>
+
+            <p>
+                📊 الكمية:
+                ${purchase.quantity}
+            </p>
+
+            <p>
+                💵 الإجمالي:
+                ${purchase.total}
+            </p>
+
+            <p>
+                🚚 المورد:
+                ${purchase.supplier_name || "غير محدد"}
+            </p>
+
+            <p>
+                📅 التاريخ:
+                ${purchase.created_at}
+            </p>
+
+        `;
+
+        purchaseList.appendChild(div);
+
+    });
+
+}
+
+
+/* =========================
+   تسجيل الشراء
+========================= */
+
+purchaseForm.addEventListener(
+    "submit",
+    async function(event) {
+
+        event.preventDefault();
+
+
+        const productId =
+            Number(productSelect.value);
+
+        const supplierId =
+            Number(supplierSelect.value);
+
+        const price =
+            Number(
+                document.getElementById("price").value
+            );
+
+        const quantity =
+            Number(
+                document.getElementById("quantity").value
+            );
+
+
+        if (
+            productId <= 0 ||
+            supplierId <= 0 ||
+            price <= 0 ||
+            quantity <= 0
+        ) {
+
+            alert("اختر المنتج والمورد وأدخل السعر والكمية بشكل صحيح");
+
+            return;
+
+        }
+
+
+        try {
+
+            const response =
+                await fetch(API_URL, {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+
+                        product_id: productId,
+
+                        supplier_id: supplierId,
+
+                        quantity: quantity,
+
+                        price: price
+
+                    })
+
+                });
+
+
+            const result =
+                await response.json();
+
+
+            console.log("Purchase result:", result);
+
+
+            if (result.success) {
+
+                alert(
+                    "تم تسجيل الشراء وتحديث المخزون بنجاح ✅"
+                );
+
+                purchaseForm.reset();
+
+                loadProducts();
+
+                loadSuppliers();
+
+                loadPurchases();
+
+            } else {
+
+                alert(
+                    result.error ||
+                    "حدث خطأ أثناء تسجيل الشراء"
+                );
+
+            }
+
+
+        } catch (error) {
+
+            console.error("خطأ التسجيل:", error);
+
+            alert("تعذر الاتصال بالسيرفر");
+
+        }
+
+    }
+);
+
+
+/* =========================
+   تشغيل الصفحة
+========================= */
+
+loadProducts();
+
+loadSuppliers();
+
+loadPurchases();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>التقارير</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            direction: rtl;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .report {
+            background: white;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 12px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        .report h2 {
+            margin-top: 0;
+        }
+
+        .number {
+            font-size: 28px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 30px;
+        }
+    </style>
+</head>
+
+<body>
+<script src="auth.js"></script>
+    <h1>📊 التقارير</h1>
+
+    <div id="reports">
+
+        <div class="loading">
+            جاري تحميل التقارير...
+        </div>
+
+    </div>
+
+
+    <script>
+
+        const PRODUCTS_API =
+            "https://my-salary.infinityfreeapp.com/api/products.php";
+
+        const SALES_API =
+            "https://my-salary.infinityfreeapp.com/api/sales.php";
+
+        const PURCHASES_API =
+            "https://my-salary.infinityfreeapp.com/api/purchases.php";
+
+
+        async function loadReports() {
+
+            try {
+
+                const [
+                    productsResponse,
+                    salesResponse,
+                    purchasesResponse
+                ] = await Promise.all([
+
+                    fetch(PRODUCTS_API),
+
+                    fetch(SALES_API),
+
+                    fetch(PURCHASES_API)
+
+                ]);
+
+
+                const products =
+                    await productsResponse.json();
+
+                const sales =
+                    await salesResponse.json();
+
+                const purchases =
+                    await purchasesResponse.json();
+
+
+                /* إجمالي المنتجات */
+
+                const totalProducts =
+                    Array.isArray(products)
+                        ? products.length
+                        : 0;
+
+
+                /* إجمالي الكميات */
+
+                let totalStock = 0;
+
+                if (Array.isArray(products)) {
+
+                    products.forEach(function(product) {
+
+                        totalStock +=
+                            Number(product.quantity || 0);
+
+                    });
+
+                }
+
+
+                /* إجمالي المبيعات */
+
+                let totalSales = 0;
+
+                if (Array.isArray(sales)) {
+
+                    sales.forEach(function(sale) {
+
+                        totalSales +=
+                            Number(sale.total || 0);
+
+                    });
+
+                }
+
+
+                /* إجمالي المشتريات */
+
+                let totalPurchases = 0;
+
+                if (Array.isArray(purchases)) {
+
+                    purchases.forEach(function(purchase) {
+
+                        totalPurchases +=
+                            Number(purchase.total || 0);
+
+                    });
+
+                }
+
+
+                document.getElementById("reports").innerHTML = `
+
+                    <div class="report">
+
+                        <h2>📦 عدد المنتجات</h2>
+
+                        <div class="number">
+                            ${totalProducts}
+                        </div>
+
+                    </div>
+
+
+                    <div class="report">
+
+                        <h2>📊 إجمالي الكمية في المخزون</h2>
+
+                        <div class="number">
+                            ${totalStock}
+                        </div>
+
+                    </div>
+
+
+                    <div class="report">
+
+                        <h2>💰 إجمالي المبيعات</h2>
+
+                        <div class="number">
+                            ${totalSales.toFixed(2)}
+                        </div>
+
+                    </div>
+
+
+                    <div class="report">
+
+                        <h2>🛒 إجمالي المشتريات</h2>
+
+                        <div class="number">
+                            ${totalPurchases.toFixed(2)}
+                        </div>
+
+                    </div>
+
+                `;
+
+
+            } catch (error) {
+
+                console.error(error);
+
+                document.getElementById("reports").innerHTML = `
+
+                    <div class="loading">
+                        حدث خطأ في تحميل التقارير ❌
+                    </div>
+
+                `;
+
+            }
+
+        }
+
+
+        loadReports();
+
+    </script>
+
+</body>
+</html>

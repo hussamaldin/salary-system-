@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>المستخدمين</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            direction: rtl;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .box {
+            max-width: 600px;
+            margin: 30px auto;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 12px;
+            margin-bottom: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        button {
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: 8px;
+            background: #222;
+            color: white;
+            font-size: 16px;
+        }
+
+        #message {
+            text-align: center;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+
+<body>
+
+<script src="auth.js"></script>
+
+<div class="box">
+
+    <h1>👤 إدارة المستخدمين</h1>
+
+    <input
+        type="text"
+        id="username"
+        placeholder="اسم المستخدم"
+    >
+
+    <input
+        type="password"
+        id="password"
+        placeholder="كلمة المرور"
+    >
+
+    <button onclick="addUser()">
+        ➕ إضافة مستخدم
+    </button>
+
+    <div id="message"></div>
+<hr>
+
+<h2>👥 المستخدمون الموجودون</h2>
+
+<div id="usersList">
+    جاري تحميل المستخدمين...
+</div>
+</div>
+
+<script>
+
+async function addUser() {
+
+    const username =
+        document.getElementById("username").value.trim();
+
+    const password =
+        document.getElementById("password").value;
+
+    const message =
+        document.getElementById("message");
+
+    if (!username || !password) {
+
+        message.textContent =
+            "أدخل اسم المستخدم وكلمة المرور";
+
+        return;
+    }
+
+    try {
+
+        const response =
+            await fetch("api/users.php", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    username: username,
+                    password: password
+                })
+            });
+
+        const result =
+            await response.json();
+
+        if (result.success) {
+
+            message.textContent =
+                "تم إضافة المستخدم بنجاح ✅";
+
+            document.getElementById("username").value = "";
+            document.getElementById("password").value = "";
+
+        } else {
+
+            message.textContent =
+                result.error || "حدث خطأ ❌";
+        }
+
+    } catch (error) {
+
+        console.error(error);
+
+        message.textContent =
+            "تعذر الاتصال بالسيرفر ❌";
+    }
+}
+async function loadUsers() {
+
+    try {
+
+        const response =
+            await fetch("api/users.php");
+
+        const users =
+            await response.json();
+
+        const list =
+            document.getElementById("usersList");
+
+        if (!users.length) {
+
+            list.textContent =
+                "لا يوجد مستخدمون";
+
+            return;
+        }
+
+        list.innerHTML =
+            users.map(user => {
+
+                const isAdmin =
+                    user.username === "admin";
+
+                return `
+                    <div style="
+                        background:#f5f5f5;
+                        padding:12px;
+                        margin-top:10px;
+                        border-radius:8px;
+                        display:flex;
+                        justify-content:space-between;
+                        align-items:center;
+                    ">
+
+                        <span>
+                            👤 ${user.username}
+                        </span>
+
+                        ${
+                            isAdmin
+                            ? `<span>🔒 Admin</span>`
+                            : `
+                                <button
+                                    onclick="deleteUser(${user.id})"
+                                    style="
+                                        width:auto;
+                                        background:#c62828;
+                                        padding:8px 12px;
+                                    "
+                                >
+                                    🗑️ حذف
+                                </button>
+                            `
+                        }
+
+                    </div>
+                `;
+
+            }).join("");
+
+    } catch (error) {
+
+        console.error(error);
+
+        document.getElementById("usersList").textContent =
+            "تعذر تحميل المستخدمين ❌";
+    }
+}
+
+
+async function deleteUser(id) {
+
+    if (!confirm("هل تريد حذف هذا المستخدم؟")) {
+        return;
+    }
+
+    try {
+
+        const response =
+            await fetch("api/users.php", {
+
+                method: "DELETE",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    id: id
+                })
+            });
+
+        const result =
+            await response.json();
+
+        if (result.success) {
+
+            alert("تم حذف المستخدم ✅");
+
+            loadUsers();
+
+        } else {
+
+            alert(
+                result.error ||
+                "فشل حذف المستخدم ❌"
+            );
+        }
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert("تعذر الاتصال بالسيرفر ❌");
+    }
+}
+
+
+loadUsers();
+
+loadUsers();
+</script>
+
+</body>
+</html>

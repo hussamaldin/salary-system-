@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>نظام إدارة المتجر</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            direction: rtl;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+      .stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    max-width: 600px;
+    margin: 0 auto 25px;
+}
+
+.stat {
+    background: white;
+    padding: 20px 10px;
+    text-align: center;
+    border-radius: 12px;
+    box-shadow: 0 2px 7px rgba(0,0,0,0.1);
+    font-size: 16px;
+}
+
+.stat .number {
+    font-size: 28px;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+        h1 {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .menu {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            max-width: 600px;
+            margin: auto;
+        }
+
+        .menu a {
+            display: block;
+            background: white;
+            padding: 25px 10px;
+            text-align: center;
+            text-decoration: none;
+            color: #222;
+            border-radius: 12px;
+            box-shadow: 0 2px 7px rgba(0,0,0,0.1);
+            font-size: 18px;
+        }
+
+        .menu a:hover {
+            background: #eee;
+        }
+
+        .logout {
+            display: block;
+            max-width: 600px;
+            margin: 25px auto 0;
+            padding: 25px 10px;
+            text-align: center;
+            background: #222;
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+        }
+    </style>
+</head>
+
+<body>
+<script src="auth.js"></script>
+    <h1>🏪  نظام إدارة المتجر</h1>
+<div class="stats">
+
+    <div class="stat">
+        <div class="number" id="productsCount">0</div>
+        <div>📦 عدد المنتجات</div>
+    </div>
+
+    <div class="stat">
+        <div class="number" id="salesCount">0</div>
+        <div>🛒 عدد المبيعات</div>
+    </div>
+
+    <div class="stat">
+        <div class="number" id="customersCount">0</div>
+        <div>👥 عدد العملاء</div>
+    </div>
+
+    <div class="stat">
+        <div class="number" id="lowStockCount">0</div>
+        <div>⚠️ مخزون منخفض</div>
+    </div>
+
+</div>
+    <div class="menu">
+
+        <a href="products.html">
+            📦 المنتجات
+        </a>
+
+        <a href="sales.html">
+            💰 المبيعات
+        </a>
+
+        <a href="customers.html">
+            👥 العملاء
+        </a>
+
+        <a href="suppliers.html">
+            🚚 الموردين
+        </a>
+
+        <a href="purchase.html">
+            🛒 المشتريات
+        </a>
+
+        <a href="inventory.html">
+            📊 المخزون
+        </a>
+
+      
+    </div>
+        </a>
+<a class="logout" href="logout.html">
+    🚪 تسجيل الخروج
+</a>
+    
+<script>
+
+async function loadStats() {
+
+    try {
+
+        const productsResponse =
+            await fetch("api/products.php");
+
+        const products =
+            await productsResponse.json();
+
+        document.getElementById("productsCount").textContent =
+            products.length;
+
+        const lowStock =
+            products.filter(
+                product =>
+                    Number(product.quantity) <=
+                    Number(product.min_quantity)
+            );
+
+        document.getElementById("lowStockCount").textContent =
+            lowStock.length;
+
+
+        const salesResponse =
+            await fetch("api/sales.php");
+
+        const sales =
+            await salesResponse.json();
+
+        document.getElementById("salesCount").textContent =
+            sales.length;
+
+
+        const customersResponse =
+            await fetch("api/customers.php");
+
+        const customers =
+            await customersResponse.json();
+
+        document.getElementById("customersCount").textContent =
+            customers.length;
+
+    } catch (error) {
+
+        console.error(
+            "خطأ في تحميل الإحصائيات:",
+            error
+        );
+
+    }
+
+}
+
+loadStats();
+
+          </script>
+</body>
+</html>

@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Modify Product</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .form-container {
+            max-width: 500px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 20px;
+            border: none;
+            background: #007bff;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        #message {
+            margin-top: 15px;
+            text-align: center;
+        }
+      .back{
+        background-color:#555
+      }
+    </style>
+</head>
+
+<body>
+
+<div class="form-container">
+
+    <h2>Modify Product</h2>
+
+    <form id="modifyForm">
+
+        <input
+            type="text"
+            id="productName"
+            placeholder="اسم المنتج">
+
+        <input
+            type="number"
+            id="purchasePrice"
+            placeholder="سعر الشراء">
+
+        <input
+            type="number"
+            id="salePrice"
+            placeholder="سعر البيع">
+
+        <input
+            type="number"
+            id="productQuantity"
+            placeholder="الكمية">
+
+        <input
+            type="number"
+            id="minQuantity"
+            placeholder="الحد الأدنى للمخزون"
+            >
+      
+
+
+        <button type="button" onclick="modifyp(event)">
+            Save Changes
+        </button>
+
+    </form>
+
+    <div id="message"></div>
+
+  
+    <button class="back" onclick="window.location.href='products.html'">
+        العودة للمنتجات
+    </button>
+</div>
+<script src="auth.js"></script>
+
+<script>
+
+    
+    const params = new URLSearchParams(window.location.search);
+
+    const productId = params.get("id");
+
+
+    // التأكد أن ID موجود
+    if (!productId) {
+
+        document.getElementById("message").textContent =
+            "Product ID not found";
+
+    } else {
+
+        loadProduct();
+
+    }
+
+
+    // جلب بيانات المنتج
+    async function loadProduct() {
+
+        try {
+
+            const response =
+                await fetch(`api/products.php?id=${productId}`);
+
+            const product =
+                await response.json();
+
+
+            // وضع البيانات داخل الفورم
+
+            document.getElementById("productName").value =
+                product.name;
+
+            document.getElementById("purchasePrice").value =
+                product.purchase_price;
+
+            document.getElementById("salePrice").value =
+                product.sale_price;
+
+          document.getElementById("productQuantity").value =
+                product.quantity;
+
+          document.getElementById("minQuantity").value =
+                product.min_quantity;
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            document.getElementById("message").textContent =
+                "Error loading product";
+
+        }
+
+    }
+
+  async function modifyp(event){
+    event.preventDefault;
+  const updatedProduct = {
+
+                id: productId,
+
+                name:
+                    document.getElementById("productName").value,
+
+                sale_price:
+                    document.getElementById("salePrice").value,
+    
+                 purchase_price:
+                    document.getElementById("purchasePrice").value,
+
+                quantity:
+                    document.getElementById("productQuantity").value,
+              
+                  min_quantity:
+                    document.getElementById("minQuantity").value
+
+            };
+
+
+            try {
+
+                const response = await fetch(
+                    "api/products.php",
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+
+                        body: JSON.stringify(updatedProduct)
+                    }
+                );
+
+
+                const result =
+                    await response.json();
+
+
+                if (result.success) {
+
+                    document.getElementById("message").textContent =
+                        "Product updated successfully";
+
+                } else {
+
+                    document.getElementById("message").textContent =
+                        result.message || "Update failed";
+
+                }
+
+
+            } catch (error) {
+
+                console.error(error);
+
+                document.getElementById("message").textContent =
+                    "Error updating product";
+
+            }
+};
+
+</script>
+
+</body>
+</html>

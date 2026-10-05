@@ -1,0 +1,16 @@
+<?php
+
+$host = "sql213.infinityfree.com";
+$user = "if0_43058319";
+$password = "pVB57lY1YoMPXrU";
+$database = "if0_43058319_storesystem";
+
+$conn = new mysqli($host, $user, $password, $database);
+
+if ($conn->connect_error) {
+    die("فشل الاتصال بقاعدة البيانات");
+}
+
+$conn->set_charset("utf8mb4");
+
+?>

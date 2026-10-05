@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>المنتجات</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #222;
+        }
+
+        .box {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        button {
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: 8px;
+            background: #1976d2;
+            color: white;
+            font-size: 17px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .product {
+            background: #f8f8f8;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 8px;
+            border-right: 4px solid #1976d2;
+        }
+
+        .message {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .back {
+            background: #555;
+        } .b-con{
+          display: flex;
+        }
+      .b-ch{
+        width: 90px;
+        border-radius:10px;
+        padding: 10px;
+        background-color: #1976d2;
+        color:white;
+        font-size: 15px;
+        margin-left: 5px;
+      }
+    </style>
+</head>
+
+<body>
+<script src="auth.js"></script>
+<div class="container">
+
+    <h1>📦 إدارة المنتجات</h1>
+
+    <div class="box">
+
+        <h2>إضافة منتج</h2>
+
+        <input
+            type="text"
+            id="productName"
+            placeholder="اسم المنتج">
+
+        <input
+            type="number"
+            id="purchasePrice"
+            placeholder="سعر الشراء">
+
+        <input
+            type="number"
+            id="salePrice"
+            placeholder="سعر البيع">
+
+        <input
+            type="number"
+            id="productQuantity"
+            placeholder="الكمية">
+
+        <input
+            type="number"
+            id="minQuantity"
+            placeholder="الحد الأدنى للمخزون"
+            value="5">
+
+        <button onclick="addProduct()">
+            إضافة المنتج
+        </button>
+
+        <div id="message" class="message"></div>
+
+    </div>
+
+    <div class="box">
+
+        <h2>المنتجات الموجودة</h2>
+
+        <div id="productList">
+            جاري تحميل المنتجات...
+        </div>
+
+    </div>
+
+    <button class="back" onclick="window.location.href='index.html'">
+        العودة للرئيسية
+    </button>
+
+</div>
+
+
+<script>
+
+const API_URL = "https://my-salary.infinityfreeapp.com/api/products.php";
+
+
+async function loadProducts() {
+
+    try {
+
+        const response = await fetch(API_URL);
+
+        const products = await response.json();
+
+        const productList = document.getElementById("productList");
+
+        productList.innerHTML = "";
+
+        if (products.length === 0) {
+
+            productList.innerHTML =
+                "<p>لا توجد منتجات حتى الآن.</p>";
+
+            return;
+        }
+
+
+        products.forEach(function(product) {
+
+            const div = document.createElement("div");
+
+            div.className = "product";
+
+            div.innerHTML = `
+                <strong>${product.name}</strong><br>
+                سعر الشراء: ${product.purchase_price}<br>
+                سعر البيع: ${product.sale_price}<br>
+                الكمية: ${product.quantity}<br>
+               <div class="b-con"><button class="b-ch" onclick="deletec(${product.id})">حذف</button><button class="b-ch" onclick="modify(${product.id})">تعديل</button>  </div> 
+            `;
+
+            productList.appendChild(div);
+
+        });
+
+    } catch (error) {
+
+        document.getElementById("productList").innerHTML =
+            "حدث خطأ في تحميل المنتجات";
+
+        console.error(error);
+    }
+};
+  function modify(id) {
+    window.location.href = `modifyproduct.html?id=${id}`;
+  }
+  
+async function deletec(id){
+  try{
+    const response = await fetch("api/products.php", {credentials: "include"} ,{
+            method: "DELETE",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+                id: id
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+
+            alert("تم حذف المنتج ✅");
+
+            loadProducts();
+
+        } else {
+
+            alert(
+                result.error ||
+                "فشل حذف المنتج ❌"
+            );
+        }
+  }
+  catch(error){
+    console.ereor(error);
+    alert("تعذر الاتصال");
+  }
+}
+
+async function addProduct() {
+
+    const name =
+        document.getElementById("productName").value.trim();
+
+    const purchase_price =
+        document.getElementById("purchasePrice").value;
+
+    const sale_price =
+        document.getElementById("salePrice").value;
+
+    const quantity =
+        document.getElementById("productQuantity").value;
+
+    const min_quantity =
+        document.getElementById("minQuantity").value;
+
+
+    if (!name) {
+
+        alert("اكتب اسم المنتج");
+
+        return;
+    }
+
+
+    try {
+
+        const response = await fetch(API_URL, {credentials: "include"}, {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+
+                name: name,
+
+                purchase_price:
+                    Number(purchase_price),
+
+                sale_price:
+                    Number(sale_price),
+
+                quantity:
+                    Number(quantity),
+
+                min_quantity:
+                    Number(min_quantity)
+
+            })
+
+        });
+
+
+        const result = await response.json();
+
+
+        if (result.success) {
+
+            document.getElementById("message").innerText =
+                "تمت إضافة المنتج بنجاح ✅";
+
+            document.getElementById("productName").value = "";
+            document.getElementById("purchasePrice").value = "";
+            document.getElementById("salePrice").value = "";
+            document.getElementById("productQuantity").value = "";
+
+            loadProducts();
+
+        } else {
+
+            document.getElementById("message").innerText =
+                "حدث خطأ: " + result.message;
+
+        }
+
+    } catch (error) {
+
+        document.getElementById("message").innerText =
+            "تعذر الاتصال بالسيرفر";
+
+        console.error(error);
+    }
+}
+
+
+loadProducts();
+
+</script>
+
+</body>
+</html>

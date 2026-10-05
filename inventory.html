@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>المخزون</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            direction: rtl;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .inventory {
+            background: white;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        .inventory h3 {
+            margin-top: 0;
+        }
+
+        .low {
+            color: red;
+            font-weight: bold;
+        }
+
+        .normal {
+            color: green;
+            font-weight: bold;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 30px;
+            color: #777;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: #222;
+            color: white;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+<script src="auth.js"></script>
+    <h1>📦 المخزون</h1>
+
+    <button onclick="loadInventory()">
+        🔄 تحديث المخزون
+    </button>
+
+    <div id="inventoryList">
+        جاري تحميل المخزون...
+    </div>
+
+
+    <script>
+
+        const API_URL =
+            "https://my-salary.infinityfreeapp.com/api/products.php";
+
+
+        async function loadInventory() {
+
+            const inventoryList =
+                document.getElementById("inventoryList");
+
+            inventoryList.innerHTML =
+                "جاري تحميل المخزون...";
+
+
+            try {
+
+                const response =
+                    await fetch(API_URL);
+
+                if (!response.ok) {
+                    throw new Error("حدث خطأ في الاتصال");
+                }
+
+                const products =
+                    await response.json();
+
+
+                if (
+                    !Array.isArray(products) ||
+                    products.length === 0
+                ) {
+
+                    inventoryList.innerHTML =
+                        '<div class="empty">لا توجد منتجات في المخزون</div>';
+
+                    return;
+                }
+
+
+                inventoryList.innerHTML = "";
+
+
+                products.forEach(function(product) {
+
+                    const quantity =
+                        Number(product.quantity || 0);
+
+                    const minQuantity =
+                        Number(product.min_quantity || 5);
+
+
+                    let status = "";
+                    let statusClass = "";
+
+
+                    if (quantity <= minQuantity) {
+
+                        status =
+                            "⚠️ المخزون منخفض";
+
+                        statusClass =
+                            "low";
+
+                    } else {
+
+                        status =
+                            "✅ المخزون جيد";
+
+                        statusClass =
+                            "normal";
+                    }
+
+
+                    const div =
+                        document.createElement("div");
+
+                    div.className =
+                        "inventory";
+
+
+                    div.innerHTML = `
+
+                        <h3>
+                            📦 ${product.name}
+                        </h3>
+
+                        <p>
+                            💰 سعر الشراء:
+                            ${product.purchase_price}
+                        </p>
+
+                        <p>
+                            💵 سعر البيع:
+                            ${product.sale_price}
+                        </p>
+
+                        <p>
+                            📊 الكمية الحالية:
+                            <strong>${quantity}</strong>
+                        </p>
+
+                        <p class="${statusClass}">
+                            ${status}
+                        </p>
+
+                    `;
+
+
+                    inventoryList.appendChild(div);
+
+                });
+
+
+            } catch (error) {
+
+                console.error(error);
+
+                inventoryList.innerHTML =
+                    '<div class="empty">حدث خطأ في تحميل المخزون</div>';
+
+            }
+
+        }
+
+
+        loadInventory();
+
+    </script>
+
+</body>
+</html>

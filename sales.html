@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>المبيعات - نظام إدارة المتجر</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            color: #1f2937;
+        }
+
+        header {
+            background: #1f2937;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: auto;
+            padding: 20px;
+        }
+
+        .box {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .box h2,
+        .box h3 {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 7px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #d1d5db;
+            border-radius: 9px;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        button {
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: 9px;
+            background: #2563eb;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .sale {
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 12px;
+        }
+
+        .sale p {
+            margin: 7px 0;
+        }
+
+        .empty {
+            text-align: center;
+            color: #64748b;
+            padding: 20px;
+        }
+
+        .back {
+            background: #64748b;
+        }
+    </style>
+</head>
+
+<body>
+<script src="auth.js"></script>
+<header>
+    <h1>💰 إدارة المبيعات</h1>
+</header>
+
+<div class="container">
+
+    <div class="box">
+        <h2>تسجيل عملية بيع</h2>
+        <p>أدخل بيانات عملية البيع</p>
+    </div>
+
+    <div class="box">
+
+        <form id="salesForm">
+
+            <label>اسم المنتج</label>
+
+            <select id="productSelect" required>
+    <option value="">جاري تحميل المنتجات...</option>
+            </select>
+
+            <label>سعر البيع</label>
+
+            <input
+                type="number"
+                id="price"
+                placeholder="مثلاً: 150000"
+                required
+            >
+
+            <label>الكمية</label>
+
+            <input
+                type="number"
+                id="quantity"
+                placeholder="مثلاً: 2"
+                required
+            >
+
+            <label>اسم العميل</label>
+
+            <input
+                type="text"
+                id="customer"
+                placeholder="اسم العميل"
+                required
+            >
+
+            <button type="submit">
+                تسجيل البيع
+            </button>
+
+        </form>
+
+    </div>
+
+    <div class="box">
+
+        <h3>📋 عمليات البيع</h3>
+
+        <div id="salesList">
+            <div class="empty">
+                لا توجد عمليات بيع حتى الآن
+            </div>
+        </div>
+
+    </div>
+
+    <button
+        class="back"
+        onclick="window.location.href='index.html'">
+        ← العودة للوحة التحكم
+    </button>
+
+</div>
+
+<script>
+
+const API_URL = "https://my-salary.infinityfreeapp.com/api/sales.php";
+
+const salesForm = document.getElementById("salesForm");
+const salesList = document.getElementById("salesList");
+
+
+async function loadSales() {
+
+    try {
+
+        const response = await fetch(API_URL);
+
+        const sales = await response.json();
+
+        salesList.innerHTML = "";
+
+        if (!Array.isArray(sales) || sales.length === 0) {
+
+            salesList.innerHTML =
+                '<div class="empty">لا توجد عمليات بيع حتى الآن</div>';
+
+            return;
+        }
+
+        sales.forEach(function(sale) {
+
+            const div = document.createElement("div");
+
+            div.className = "sale";
+
+            div.innerHTML = `
+                <strong>📦 ${sale.product_name || "منتج"}</strong>
+                <p>💰 السعر: ${sale.price}</p>
+                <p>📊 الكمية: ${sale.quantity}</p>
+                <p>💵 الإجمالي: ${sale.total}</p>
+                <p>📅 التاريخ: ${sale.created_at}</p>
+            `;
+
+            salesList.appendChild(div);
+
+        });
+
+    } catch (error) {
+
+        salesList.innerHTML =
+            '<div class="empty">حدث خطأ في تحميل المبيعات</div>';
+
+        console.error(error);
+    }
+}
+const productSelect = document.getElementById("productSelect");
+
+async function loadProducts() {
+
+    try {
+
+        const response = await fetch(
+            "https://my-salary.infinityfreeapp.com/api/products.php"
+        );
+
+        const products = await response.json();
+
+        productSelect.innerHTML =
+            '<option value="">اختر المنتج</option>';
+
+        products.forEach(function(product) {
+
+            const option = document.createElement("option");
+
+            option.value = product.id;
+
+            option.textContent =
+                product.name + " - الكمية: " + product.quantity;
+
+            option.dataset.price = product.sale_price;
+
+            productSelect.appendChild(option);
+
+        });
+
+    } catch (error) {
+
+        productSelect.innerHTML =
+            '<option value="">تعذر تحميل المنتجات</option>';
+
+        console.error(error);
+    }
+}
+
+loadProducts();
+
+salesForm.addEventListener("submit", async function(event) {
+
+    event.preventDefault();
+
+    const productId =
+        Number(document.getElementById("productSelect").value);
+
+    const price =
+        Number(document.getElementById("price").value);
+
+    const quantity =
+        Number(document.getElementById("quantity").value);
+
+    const customer =
+        document.getElementById("customer").value.trim();
+
+
+    if (!productId || price <= 0 || quantity <= 0) {
+
+        alert("أدخل بيانات البيع بشكل صحيح");
+
+        return;
+    }
+
+
+    try {
+
+        const resultResponse = await fetch(API_URL, {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+
+                product_id: productId,
+
+                customer_id: 0,
+
+                quantity: quantity,
+
+                price: price
+
+            })
+
+        });
+
+
+        const result = await resultResponse.json();
+
+
+        if (result.success) {
+
+            alert("تم تسجيل البيع بنجاح ✅");
+
+            salesForm.reset();
+
+            loadSales();
+
+            loadProducts();
+
+        } else {
+
+            alert(result.error || "حدث خطأ أثناء تسجيل البيع");
+
+        }
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert("تعذر الاتصال بالسيرفر");
+
+    }
+
+});
+
+
+loadSales();
+
+              </script>
+
+</body>
+</html>
